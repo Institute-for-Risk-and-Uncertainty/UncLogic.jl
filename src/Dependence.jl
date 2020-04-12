@@ -52,7 +52,6 @@ end
 function Gau(x:: UncBool, y :: UncBool, corr :: UncBool) 
 
     checkUncBool(x); checkUncBool(x); checkCor(corr);
-    println("UncBoolUsed")
 
     bounds = [-1.0,-1.0];
     Xs = [left(x), right(x)]; Ys = [left(y), right(y)];
