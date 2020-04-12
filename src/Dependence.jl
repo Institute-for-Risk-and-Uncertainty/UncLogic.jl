@@ -39,7 +39,7 @@ end
 M(x :: UncBool, y :: UncBool ) = min(x, y);
 W(x :: UncBool, y :: UncBool ) = max(x+y-1,0);
 
-function Gau(x:: UncBool, y :: UncBool, corr :: Float64) 
+function Gau(x:: Float64, y :: Float64, corr :: Float64) 
 
     checkCor(corr)
     if corr == 1;  return M(x,y);end
@@ -48,6 +48,26 @@ function Gau(x:: UncBool, y :: UncBool, corr :: Float64)
     
     return bivariate_cdf(quantile.(Normal(),x),quantile.(Normal(),y), corr)
 end
+
+function Gau(x:: UncBool, y :: UncBool, corr :: UncBool) 
+
+    checkUncBool(x); checkUncBool(x); checkCor(corr);
+    println("UncBoolUsed")
+
+    bounds = [-1.0,-1.0];
+    Xs = [left(x), right(x)]; Ys = [left(y), right(y)];
+    Cors = [left(corr), right(corr)];
+    for i = 1:2
+            if Cors[i] == 1;  bounds[i] = M(Xs[i],Ys[i]);
+        elseif Cors[i] == -1; bounds[i] = W(Xs[i],Ys[i]);
+        elseif Cors[i] == 0 ; bounds[i] = π(Xs[i],Ys[i]);
+        else bounds[i] = bivariate_cdf(quantile.(Normal(),Xs[i]),quantile.(Normal(),Ys[i]), Cors[i]); end
+    end
+    z = interval(bounds[1], bounds[2]);
+    checkUncBool(z,true);
+    return z
+end
+
 
 
 
