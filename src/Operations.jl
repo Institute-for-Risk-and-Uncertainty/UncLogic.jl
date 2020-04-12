@@ -14,9 +14,7 @@
 
 function and(x :: UncBool, y :: UncBool, corr  = DefaultCorr)
 
-    checkUncBool(x); checkUncBool(y);
-
-    checkCor(corr)
+    checkUncBool.([x,y]); checkCor(corr)
 
     z = Copula(x,y,corr); checkUncBool(z,true);
 
@@ -26,11 +24,11 @@ end
 (&)(x::UncBool , y::UncBool) = and(x, y);
 
 function or(x :: UncBool, y ::UncBool, corr = DefaultCorr)
-    checkUncBool(x); checkUncBool(y);
-
-    checkCor(corr)
+    
+    checkUncBool.([x,y]); checkCor(corr)
 
     z = ~and(~x,~y,corr); checkUncBool(z,true); 
+
     return z;
 end
 
@@ -44,3 +42,4 @@ function not(x :: UncBool)
 end
 
 ~(x :: UncBool) = not(x)
+~(x :: Int64)   = not(x)
