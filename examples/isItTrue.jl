@@ -24,18 +24,22 @@ function isItTrue(x :: UncBool, y :: UncBool, z :: UncBool)
     depBefore = DefaultCorr;
     global DefaultCorr = 0;
 
-    x1 = x & y; x2 = z | y;
+    x1 = x & y;
+    x2 = z | y;
     x3 = ~(x1 & x2);
     x4 = z | x2;
     x5 = x3 & ~y;
+    x6 = x4 | ~y;
 
     global DefaultCorr = depBefore;
 
     checkUncBool.([x4,x5])
-    return x4, x5;
+    return [x5, x6]
 
 end
 
+#isItTrue(x) = isItTrue(x[1], x[2], x[3])
+#=
 ## With just booleans
 x = 1; y = 0; z = 1;
 println(isItTrue(x,y,z))
@@ -51,3 +55,27 @@ print(isItTrue(x,y,z))
 #test
 x=0.6; y=0.2;
 print(conditional(x,y))
+=#
+
+InputProbs = [0.2,0.6,0.1];
+N = 10^6;
+randomBools = randomBool(InputProbs, N);
+
+MCoutput = falses(N,2);
+
+for i=1:N
+    MCoutput[i,:] = isItTrue.(randomBools[i,1], randomBools[i,2], randomBools[i,3]);
+end
+
+McProbsOut = sum(MCoutput, dims=1)/N;
+
+jointProbsMC = [(MCoutput[:,1] .== false) .& (MCoutput[:,2] .== false) (MCoutput[:,1] .== false) .& (MCoutput[:,2] .== true) (MCoutput[:,1] .== true) .& (MCoutput[:,2] .== false) (MCoutput[:,1] .== true) .& (MCoutput[:,2] .== true)];
+jointMcResults = sum(jointProbsMC, dims = 1)/N;
+
+println("                   |  0,0  |   0,1   |   1,0  |   1,1  |")
+println("Mc joint results = $jointMcResults")
+
+UncProbsOut = isItTrue(InputProbs[1], InputProbs[2], InputProbs[3])
+
+println("MC results       = $McProbsOut")
+println("UncLogic results = $UncProbsOut")

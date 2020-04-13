@@ -25,8 +25,8 @@ println("Mc results    = $results");
 
 println("--------------------------------------------------------------")
 
-Probs2 = [0.9,0.2];
-corr = 0.001 
+Probs2 = [0.5,0.001];
+corr = 0.0
 corrBools = corrBool(Probs2[1],Probs2[2], corr, N);
 results2 = sum(corrBools, dims=1)/N;
 
