@@ -39,7 +39,7 @@ function checkCor( x :: UncBool)
     if typeof(x) <: Bool; return Ok; end
 
     if typeof(x) <: Union{Int,Float64}; 
-        if x > 1 || x < 0; Ok = false; end
+        if x > 1 || x < -1; Ok = false; end
     end
 
     if typeof(x) <: AbstractInterval

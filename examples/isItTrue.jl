@@ -2,7 +2,7 @@
 #   
 #       Part of the UncLogic.jl package, for pushing uncertainty through 
 #       logical statements
-#       
+#    
 #       Example of a simple boolean function with uncertainty
 #
 #       Institute for Risk and Uncertainty, University of Liverpool
@@ -47,3 +47,7 @@ println(isItTrue(x,y,z))
 ## With intervals
 x = 1; y = interval(0.4,0.6); z = 1;
 print(isItTrue(x,y,z))
+
+#test
+x=0.6; y=0.2;
+print(conditional(x,y))
