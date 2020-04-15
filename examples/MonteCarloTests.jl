@@ -26,7 +26,7 @@ println("Mc results    = $results");
 println("--------------------------------------------------------------")
 
 Probs2 = [0.5,0.001];
-corr = 0.0
+corr = 0.5
 corrBools = corrBool(Probs2[1],Probs2[2], corr, N);
 results2 = sum(corrBools, dims=1)/N;
 
@@ -40,11 +40,11 @@ jointProbsMC = [(corrBools[:,1] .== false) .& (corrBools[:,2] .== false) (corrBo
 jointMcResults = sum(jointProbsMC, dims = 1)/N;
 
 println("                   |  0,0  |   0,1   |   1,0  |   1,1  |")
-println("Real joint results = $jointProbs")
-println("MC   joint results = $jointMcResults")
+println("UncLogic  joint results = $jointProbs")
+println("MC        joint results = $jointMcResults")
 
 println()
 
-println("Sum of Reals = $(sum(jointProbs))")
-println("Sum of MC    = $(sum(jointMcResults))")
+println("Sum of UncLogic = $(sum(jointProbs))")
+println("Sum of MC       = $(sum(jointMcResults))")
 #test
