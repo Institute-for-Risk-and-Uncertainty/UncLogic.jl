@@ -10,9 +10,20 @@
 #                           Authors: Ander Gray, Enrique Miralles
 #                           Email: -----
 #
+#
+#
+#       To Do:
+#                    -> Fix correlated sampler (close)
+#                    -> Fix and: use Scotts model with checking of correlation coefficient
+#                    -> Compute joint distributions with correlations and 2 marginals
+#                    -> 
+#
+#
+#
+#
 ###
 
-using IntervalArithmetic, Distributions
+using IntervalArithmetic, Distributions, StatsBase, LinearAlgebra
 
 import Base.&, Base.|, Base.~
 

@@ -31,7 +31,7 @@ function Copula(x :: UncBool, y :: UncBool, corr)
     #if corr == interval(-1,1); return interval(W( left(x), left(y) ), M( right(x), right(y)) );end
     
     return interval(Gau(left(x),left(y),left(corr)), Gau(right(x),right(y),right(corr)))
-
+    #return Frank(x,y,corr)
 end
 
 π(x :: UncBool, y :: UncBool ) = x*y;
@@ -46,6 +46,18 @@ function Gau(x:: Float64, y :: Float64, corr :: Float64)
     if corr == 0 ; return π(x,y);end
 
     return bivariate_cdf(quantile.(Normal(),x),quantile.(Normal(),y), corr)
+end
+
+function Frank(x:: Float64, y :: Float64, corr :: Float64)
+
+    checkCor(corr)
+    s = tan( pi * (1 -r)/4);
+    if corr == 1;  return M(x,y);end
+    if corr == -1; return W(x,y);end
+    if corr == 0 ; return π(x,y);end
+
+    return log(s, 1 + (s^x - 1) * (s^y - 1)/(s-1))
+        
 end
 
 function Gau(x:: UncBool, y :: UncBool, corr :: UncBool) 

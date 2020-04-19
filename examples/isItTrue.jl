@@ -15,6 +15,7 @@
 
 include("../src/UncLogic.jl")
 
+#global DefaultCorr = interval(-1,1)
 
 # Assume all inputs to be independent
 function isItTrue(x :: UncBool, y :: UncBool, z :: UncBool)
@@ -57,8 +58,8 @@ x=0.6; y=0.2;
 print(conditional(x,y))
 =#
 
-InputProbs = [0.2,0.6,0.1];
-N = 10^6;
+InputProbs = [0.5,0.6,0.1];
+N = 10^7;
 randomBools = randomBool(InputProbs, N);
 
 MCoutput = falses(N,2);

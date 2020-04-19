@@ -17,9 +17,30 @@
 
 include("../src/UncLogic.jl")
 
-N = 10^4;
 
-inputs = corrBool(0.5,0.9, 0.6, N);
+function UncCorr(Joint :: Array{Float64})
+
+    MarginalX = Joint[4] + Joint[2];
+    MarginalY = Joint[4] + Joint[3];
+
+
+    VarX= MarginalX*(1 - MarginalX);
+    VarY = MarginalY*(1 - MarginalY);
+
+    CovXY = Joint[4] - (Joint[4] + Joint[3]) * (Joint[4] + Joint[2])
+    StdX = sqrt(VarX);
+    StdY = sqrt(VarY);
+    CorrXY = CovXY/(StdX * StdY)
+
+    return CorrXY
+end
+
+
+N = 10^5;
+
+p1 = 0.3; p2 = 0.9; corr = 0.9;
+
+inputs = corrBool(p1,p2, corr, N);
 
 
 out =  and.(inputs[:,1], inputs[:,2]);
@@ -29,8 +50,8 @@ inputProb = sum(inputOfInterest)/N;
 
 outProb = sum(out)/N;
 
-#Joint = ComputeJoint(hcat(out, inputOfInterest));
-Joint = ComputeJoint(inputs)
+Joint = ComputeJoint(hcat(out, inputOfInterest), plot =false);
+#Joint = ComputeJoint(inputs,plot =false);
 
 println()
 println("------------")
@@ -66,8 +87,31 @@ CorrInOut = CovInOut/(StdIn * StdOut)
 
 
 println()
-println("------------")
+println("------------");
 println()
 println("Cov In/Out = $CovInOut")
 println("Cor In/Out = $CorrInOut")
+
+JointUncLogic = zeros(4,1)
+
+JointUncLogic[4] = left(and(p1,p2,corr));
+JointUncLogic[3] = 0 # Can never be 1 if either of the inputs are 0
+JointUncLogic[2] = left(and(p1, ~p2,-1*corr));
+JointUncLogic[1] = left(and(~p1,~p2,corr) + and(~p1,p2,-1*corr));
+
+
+
+println()
+println("------------")
+println()
+Joint = ComputeJoint(hcat(out, inputOfInterest));
+println("UncLogic  joint         = $JointUncLogic")
+
+McCor       = UncCorr(Joint)
+UncLogicCor = UncCorr(JointUncLogic)
+println()
+println("------------")
+println()
+println("MC        cor           = $McCor")
+println("UncLogic  cor           = $UncLogicCor")
 
