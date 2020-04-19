@@ -2,7 +2,7 @@
 include("../src/UncLogic.jl")
 
 a1 = 0.5; a2 = 0.5; r = 0;
-N = 10^7;
+N = 10^6;
 
 BoolDeviates = corrBool(a1,a2,r, N)
 

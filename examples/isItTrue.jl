@@ -24,7 +24,7 @@ function isItTrue(x :: UncBool, y :: UncBool, z :: UncBool)
 
     depBefore = DefaultCorr;
     global DefaultCorr = 0;
-
+    
     x1 = x & y;
     x2 = z | y;
     x3 = ~(x1 & x2);

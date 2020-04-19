@@ -58,8 +58,10 @@ function checkValidJoint(x:: UncBool, y:: UncBool, corr :: UncBool)
 
     checkUncBool.([x, y]); checkCor(corr);
     denominator = sqrt(x*(1-x)*y*(1-y));
-    lower_bound_correlation = max(x+y-1,0)/denominator;
-    upper_bound_correlation = (min(x,y)-x*y)/denominator;
+    lower_bound_correlation = (max(x+y-1,0)-x*y)/denominator
+    upper_bound_correlation = (min(x,y)-x*y)/denominator
+
+    println("r ∈ [$lower_bound_correlation, $upper_bound_correlation]")
 
     if corr < lower_bound_correlation || corr > upper_bound_correlation
         throw(ArgumentError("Correlation must be ⊆ [$(lower_bound_correlation), $(upper_bound_correlation)]. Provided = $(corr)"));

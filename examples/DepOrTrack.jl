@@ -39,7 +39,7 @@ end
 
 MCresult  = nestedOr.(BoolDeviates[:,1], BoolDeviates[:,2])
 
-UncLogicNoTrak = nestedOr(a1,a2,r)
+UncLogicNoTrak   = nestedOr(a1,a2,r)
 UncLogicWithTrak = nestedOrDepTrack(a1,a2,r)
 
 MCresult = sum(MCresult)/N
