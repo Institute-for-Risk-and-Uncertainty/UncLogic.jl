@@ -162,3 +162,13 @@ function UncCorr(Joint :: Array{Float64})
 
     return CorrXY
 end
+
+function getValidCorr(x :: UncBool, y :: UncBool)
+
+    checkUncBool.([x, y]);
+    denominator = sqrt(x*(1-x)*y*(1-y));
+    lower_bound_correlation = (max(x+y-1,0)-x*y)/denominator
+    upper_bound_correlation = (min(x,y)-x*y)/denominator
+
+    return Interval(lower_bound_correlation,upper_bound_correlation)
+end

@@ -55,7 +55,6 @@ function checkValidJoint(x:: UncBool, y:: UncBool, corr :: UncBool)
     # From Page 20. of Sandia report: Dependency modelling. Checking if provided corrletion
     # is within possible allowed bounds of marginal probabilities. Does not behave as expected.
     # Equations provided in sandia create correlation above 1.
-
     checkUncBool.([x, y]); checkCor(corr);
     denominator = sqrt(x*(1-x)*y*(1-y));
     lower_bound_correlation = (max(x+y-1,0)-x*y)/denominator
@@ -66,5 +65,7 @@ function checkValidJoint(x:: UncBool, y:: UncBool, corr :: UncBool)
     if corr < lower_bound_correlation || corr > upper_bound_correlation
         throw(ArgumentError("Correlation must be ⊆ [$(lower_bound_correlation), $(upper_bound_correlation)]. Provided = $(corr)"));
     end
+
     return true
+
 end
