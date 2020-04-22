@@ -48,10 +48,18 @@ function Gau(x:: Float64, y :: Float64, corr :: Float64)
     return bivariate_cdf(quantile.(Normal(),x),quantile.(Normal(),y), corr)
 end
 
+function AndFrank(x:: UncBool, y :: UncBool, corr :: UncBool)
+
+    LB = Frank(left(x),left(y),left(corr))
+    UB = Frank(right(x),right(y),right(corr))
+
+    return interval(LB,UB);
+end
+
 function Frank(x:: Float64, y :: Float64, corr :: Float64)
 
     checkCor(corr)
-    s = tan( pi * (1 -r)/4);
+    s = tan( pi * (1 -corr)/4);
     if corr == 1;  return M(x,y);end
     if corr == -1; return W(x,y);end
     if corr == 0 ; return π(x,y);end
