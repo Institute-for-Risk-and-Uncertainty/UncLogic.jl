@@ -16,8 +16,15 @@
 function and(x:: UncBool, y::UncBool, corr = DefaultCorr)
     checkUncBool.([x,y]); checkCor(corr);
 
-    a = Joint(x,y,corr);
-    return a[4];
+    if (typeof(x) <: Bool) & (typeof(y) <: Bool)
+        return x & y;
+    end
+    if (typeof(x) <: Int) & (typeof(y) <: Int)
+        return x & y;
+    end
+    
+    a = BCopula(x,y,corr);
+    return a;
 
 end
 

@@ -79,6 +79,30 @@ function Gau(x:: UncBool, y :: UncBool, corr :: UncBool)
 end
 
 
+function BooleanCopula(p :: Union{Bool,Int64,Float64}, q :: Union{Bool,Int64,Float64}, r :: Union{Int64,Float64})
+
+    denominator = sqrt(p*(1-p)*q*(1-q));
+    Lr = (max(p+q-1,0)-p*q)/denominator;
+    Ur = (min(p,q)-p*q)/denominator
+
+    if r < Lr; return max(p+q-1,0);end
+    if r > Ur; return min(p,q);end
+
+    d = p * q + r*sqrt(p*q*(1-p)*(1-q));
+    return d
+end
+
+function BCopula(p :: UncBool, q :: UncBool, r :: UncBool)
+    
+    checkUncBool.([p,q]); checkCor(r);
+
+    lB = BooleanCopula(left(p),left(q), left(r));
+    uB = BooleanCopula(right(p),right(q), right(r));
+
+    return interval(lB,uB)
+
+end
+
 
 
 
