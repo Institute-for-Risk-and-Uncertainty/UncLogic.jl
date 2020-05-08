@@ -22,7 +22,7 @@ function and(x:: UncBool, y::UncBool, corr = DefaultCorr)
     if (typeof(x) <: Int) & (typeof(y) <: Int)
         return x & y;
     end
-    
+
     a = BCopula(x,y,corr);
     return a;
 
@@ -60,6 +60,20 @@ function or(x :: UncBool, y ::UncBool, corr = DefaultCorr)
 end
 
 (|)(x::UncBool , y::UncBool) = or(x, y);
+
+function nor(x :: UncBool, y ::UncBool, corr)
+
+    checkUncBool.([x,y]); checkCor(corr)
+    if (typeof(x) <: Bool) & (typeof(y) <: Bool)
+        return x | y;
+    end
+    if (typeof(x) <: Int) & (typeof(y) <: Int)
+        return x | y;
+    end 
+    return ~and(x,y,corr)
+end
+
+xor(x,y)= and(~and(~x,~y), ~and(x,y))
 
 function not(x :: UncBool)
     checkUncBool(x);
