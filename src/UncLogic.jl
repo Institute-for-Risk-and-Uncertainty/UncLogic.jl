@@ -25,7 +25,7 @@
 
 using IntervalArithmetic, Distributions, StatsBase, LinearAlgebra
 
-import Base.&, Base.|, Base.~
+import Base: ~, !
 
 UncBool = Union{Bool, Int64, Float64, <:AbstractInterval}
 

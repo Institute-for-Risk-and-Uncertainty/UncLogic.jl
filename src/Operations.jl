@@ -13,14 +13,14 @@
 ###
 
 
-function and(x:: UncBool, y::UncBool, corr = DefaultCorr)
+function and(x :: UncBool, y :: UncBool, corr = DefaultCorr)
     checkUncBool.([x,y]); checkCor(corr);
 
-    if (typeof(x) <: Bool) & (typeof(y) <: Bool)
-        return x & y;
+    if (typeof(x) <: Bool) && (typeof(y) <: Bool)
+        return x && y;
     end
-    if (typeof(x) <: Int) & (typeof(y) <: Int)
-        return x & y;
+    if (typeof(x) <: Int) && (typeof(y) <: Int)
+        return Bool(x) && Bool(y);
     end
 
     a = BCopula(x,y,corr);
@@ -33,11 +33,11 @@ function andGau(x :: UncBool, y :: UncBool, corr  = DefaultCorr)
 
     checkUncBool.([x,y]); checkCor(corr);
 
-    if (typeof(x) <: Bool) & (typeof(y) <: Bool)
-        return x & y;
+    if (typeof(x) <: Bool) && (typeof(y) <: Bool)
+        return x && y;
     end
-    if (typeof(x) <: Int) & (typeof(y) <: Int)
-        return x & y;
+    if (typeof(x) <: Int) && (typeof(y) <: Int)
+        return Bool(x) && Bool(y);;
     end
     z = Copula(x,y,corr); checkUncBool(z,true);
     return z;
@@ -45,14 +45,15 @@ end
 
 (&)(x::UncBool , y::UncBool) = and(x, y);
 
+
 function or(x :: UncBool, y ::UncBool, corr = DefaultCorr)
     
     checkUncBool.([x,y]); checkCor(corr)
-    if (typeof(x) <: Bool) & (typeof(y) <: Bool)
-        return x | y;
+    if (typeof(x) <: Bool) && (typeof(y) <: Bool)
+        return x || y;
     end
-    if (typeof(x) <: Int) & (typeof(y) <: Int)
-        return x | y;
+    if (typeof(x) <: Int) && (typeof(y) <: Int)
+        return Bool(x) || Bool(y);
     end
     z = ~and(~x,~y,corr); checkUncBool(z,true);     # You may need to reverse the correlation
 
@@ -64,13 +65,16 @@ end
 function nor(x :: UncBool, y ::UncBool, corr)
 
     checkUncBool.([x,y]); checkCor(corr)
-    if (typeof(x) <: Bool) & (typeof(y) <: Bool)
-        return x | y;
+    
+    if (typeof(x) <: Bool) && (typeof(y) <: Bool)
+        return ~(x && y);
     end
-    if (typeof(x) <: Int) & (typeof(y) <: Int)
-        return x | y;
-    end 
-    return ~and(x,y,corr)
+    if (typeof(x) <: Int) && (typeof(y) <: Int)
+        return ~(Bool(x) && Bool(y));
+    end
+     
+    z = ~and(x,y,corr); checkUncBool(z,true);
+    return z
 end
 
 xor(x,y)= and(~and(~x,~y), ~and(x,y))
@@ -82,8 +86,8 @@ function not(x :: UncBool)
     return Notx;
 end
 
-~(x :: UncBool) = not(x)
-~(x :: Int64)   = not(x)
+~(x :: UncBool) = !(x :: UncBool) = not(x)
+~(x :: Int64)   = !(x :: Int64)   = not(x)
 
 function conditional(x :: UncBool, y :: UncBool, corr = DefaultCorr) #P(XY)
 
