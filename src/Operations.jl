@@ -89,8 +89,9 @@ function conditional(x :: UncBool, y :: UncBool, corr = DefaultCorr) #P(XY)
 
     checkUncBool.([x,y]); checkCor(corr);
     if x == 0; return 0; end; if y == 0; return NaN; end;
-    conditional = and(x,y,corr)/y;
+    conditional = and(x,y,corr)/dual(y);
 
+    if isDual(conditional); conditional = dual(conditional);end
     return conditional
 end
 

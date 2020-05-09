@@ -32,6 +32,12 @@ UncBool = Union{Bool, Int64, Float64, <:AbstractInterval}
 #global DefaultCorr = interval(-1,1);
 global DefaultCorr = 0;
 
+dual(x :: Interval) = Interval(x.hi,x.lo)
+dual(x :: Real) = x
+
+isDual(x :: Interval) = x.hi < x.lo
+isDual(x :: Real) = false
+
 include("Checks.jl")
 include("Operations.jl")
 include("Dependence.jl")
