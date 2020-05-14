@@ -14,7 +14,7 @@
 
 
 function and(x :: UncBool, y :: UncBool, corr = DefaultCorr)
-    checkUncBool.([x,y]); checkCor(corr);
+    checkUncBool(x); checkUncBool(y); checkCor(corr);
 
     if (typeof(x) <: Bool) && (typeof(y) <: Bool)
         return x && y;
@@ -23,7 +23,11 @@ function and(x :: UncBool, y :: UncBool, corr = DefaultCorr)
         return Bool(x) && Bool(y);
     end
 
-    a = BCopula(x,y,corr);
+    if x == 0 || y == 0; return false; end
+    if x == 1; return y; end
+    if y == 1; return x; end
+
+    a = BCopula(x,y,corr); checkUncBool(a);
     return a;
 
 end
@@ -31,7 +35,7 @@ end
 
 function andGau(x :: UncBool, y :: UncBool, corr  = DefaultCorr)
 
-    checkUncBool.([x,y]); checkCor(corr);
+    checkUncBool(x); checkUncBool(y); checkCor(corr);;
 
     if (typeof(x) <: Bool) && (typeof(y) <: Bool)
         return x && y;
@@ -48,7 +52,7 @@ end
 
 function or(x :: UncBool, y ::UncBool, corr = DefaultCorr)
     
-    checkUncBool.([x,y]); checkCor(corr)
+    checkUncBool(x); checkUncBool(y); checkCor(corr);
     if (typeof(x) <: Bool) && (typeof(y) <: Bool)
         return x || y;
     end
@@ -56,7 +60,6 @@ function or(x :: UncBool, y ::UncBool, corr = DefaultCorr)
         return Bool(x) || Bool(y);
     end
     z = ~and(~x,~y,corr); checkUncBool(z,true);     # You may need to reverse the correlation
-
     return z;
 end
 
@@ -64,7 +67,7 @@ end
 
 function nor(x :: UncBool, y ::UncBool, corr)
 
-    checkUncBool.([x,y]); checkCor(corr)
+    checkUncBool(x); checkUncBool(y); checkCor(corr);
     
     if (typeof(x) <: Bool) && (typeof(y) <: Bool)
         return ~(x && y);
@@ -86,12 +89,15 @@ function not(x :: UncBool)
     return Notx;
 end
 
-~(x :: UncBool) = !(x :: UncBool) = not(x)
-~(x :: Int64)   = !(x :: Int64)   = not(x)
+~(x :: UncBool) = not(x)
+~(x :: Int64)   = not(x)
+
+!(x :: UncBool) = not(x);
+!(x :: Int64) = not(x);
 
 function conditional(x :: UncBool, y :: UncBool, corr = DefaultCorr) #P(XY)
 
-    checkUncBool.([x,y]); checkCor(corr);
+    checkUncBool(x); checkUncBool(y); checkCor(corr);
     if x == 0; return 0; end; if y == 0; return NaN; end;
     conditional = and(x,y,corr)/dual(y);
 
@@ -100,6 +106,34 @@ function conditional(x :: UncBool, y :: UncBool, corr = DefaultCorr) #P(XY)
 end
 
 
+function Joint(x :: UncBool, y ::UncBool, corr = 0; plot = false)
+    checkUncBool(x); checkUncBool(y); checkCor(corr);
+    
+    if all.(isscalar([x,y,corr]));
+        a = BooleanCopula(~x, ~y,corr)
+        b = BooleanCopula(~x, y, -1* corr);
+        c = BooleanCopula(x, ~y, -1 * corr);
+        d = BooleanCopula(x, y ,corr)
+    else
+        a = and(~x, ~y,corr);
+        b = and(~x, y, -1* corr)
+        c = and(x, ~y, -1 * corr);
+        d = and(x, y, corr);
+    end
+
+    if plot
+        println("                          | 0,0 | 0,1 | 1,0 | 1,1 |")
+        println("UncLogic  joint results = $probs")
+    end
+
+    return [a, b, c, d]
+end
+
+function JointAnd(x :: Real, y :: Real, corr :: Real)
+
+end
+
+#=
 function Joint(x :: UncBool, y :: UncBool, corr = 0; plot = false)
 
     # Computes the joint distribution, given two marginals and a correlation
@@ -127,6 +161,7 @@ function Joint(x :: UncBool, y :: UncBool, corr = 0; plot = false)
 
     return probs
 end
+=#
 
 function JointCopula(x :: UncBool, y :: UncBool, corr = 0; plot = false)
 

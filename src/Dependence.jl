@@ -102,15 +102,47 @@ end
 
 function BCopula(p :: UncBool, q :: UncBool, r :: UncBool)
     
-    checkUncBool.([p,q]); checkCor(r);
+    checkUncBool(p); checkUncBool(q); checkCor(r);
 
-    lB = BooleanCopula(left(p),left(q), left(r));
-    uB = BooleanCopula(right(p),right(q), right(r));
+    if all(isscalar.([p,q,r])); return BooleanCopula(right(p), right(q), right(r)); end
 
-    return interval(lB,uB)
+    if !any(ispbox.(([p,q,r]))); return BCopInterval(p,q,r); end
+
+    return BCopPbox(p,q,r)
+end
+
+function BCopInterval(p :: UncBool, q :: UncBool, r :: UncBool)
+        lB = BooleanCopula(left(p),left(q), left(r));
+        uB = BooleanCopula(right(p),right(q), right(r));
+        return interval(lB, uB);
+end
+
+function BCopPbox(p :: Union{Int64, Float64,Interval}, q :: pbox, r :: Union{Int64, Float64, Interval})
+
+    RhoLeft = left(r);
+    ANDl(x,y) = BooleanCopula(x,y,RhoLeft);
+    LeftPbox = conv(left(p),q,ANDl);
+
+    RhoRight = right(r);
+    ANDr(x,y) = BooleanCopula(x,y,RhoRight);
+    RightPbox = conv(right(p),q,ANDr);
+
+    return env(LeftPbox,RightPbox)
 
 end
 
+BCopPbox(p :: pbox, q :: Union{Int64, Float64,Interval}, r :: Union{Int64, Float64,Interval}) = BCopPbox(q, p, r)
 
+function BCopPbox(p :: pbox, q :: pbox, r :: Union{Int64, Float64, Interval})
 
+    RhoLeft = left(r);
+    ANDl(x,y) = BooleanCopula(x,y,RhoLeft);
+    LeftPbox = conv(p,q,ANDl);
+
+    RhoRight = right(r);
+    ANDr(x,y) = BooleanCopula(x,y,RhoRight);
+    RightPbox = conv(p,q,ANDr);
+
+    return env(LeftPbox,RightPbox)
+end
 
