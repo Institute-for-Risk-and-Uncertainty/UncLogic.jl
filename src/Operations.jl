@@ -116,7 +116,7 @@ function Joint(x :: UncBool, y ::UncBool, corr = 0; plot = false)
         d = BooleanCopula(x, y ,corr)
     else
         a = and(~x, ~y,corr);
-        b = and(~x, y, -1* corr)
+        b = and(~x, y, -1* corr);
         c = and(x, ~y, -1 * corr);
         d = and(x, y, corr);
     end

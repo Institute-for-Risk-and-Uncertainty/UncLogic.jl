@@ -104,9 +104,11 @@ function BCopula(p :: UncBool, q :: UncBool, r :: UncBool)
     
     checkUncBool(p); checkUncBool(q); checkCor(r);
 
-    if all(isscalar.([p,q,r])); return BooleanCopula(right(p), right(q), right(r)); end
+    allScalar = (isscalar(p) && isscalar(q) && isscalar(r))
+    if allScalar; return BooleanCopula(right(p), right(q), right(r)); end
 
-    if !any(ispbox.(([p,q,r]))); return BCopInterval(p,q,r); end
+    anyPbox = (ispbox(p) || ispbox(q) || ispbox(r))
+    if !anyPbox; return BCopInterval(p,q,r); end
 
     return BCopPbox(p,q,r)
 end
