@@ -107,8 +107,11 @@ function BCopula(p :: UncBool, q :: UncBool, r :: UncBool)
     allScalar = (isscalar(p) && isscalar(q) && isscalar(r))
     if allScalar; return BooleanCopula(right(p), right(q), right(r)); end
 
-    anyPbox = (ispbox(p) || ispbox(q) || ispbox(r))
-    if !anyPbox; return BCopInterval(p,q,r); end
+    intervalCase = ((isscalar(p) || isinterval(p)) && (isscalar(q) || isinterval(q)))
+    if intervalCase return BCopInterval(p,q,r); end
+
+    fuzzyCase = ~(ispbox(p) || ispbox(q))
+    if fuzzyCase; return BCopFuzzy(p, q, r); end
 
     return BCopPbox(p,q,r)
 end
@@ -123,11 +126,11 @@ function BCopPbox(p :: Union{Int64, Float64,Interval}, q :: pbox, r :: Union{Int
 
     RhoLeft = left(r);
     ANDl(x,y) = BooleanCopula(x,y,RhoLeft);
-    LeftPbox = conv(left(p),q,ANDl);
+    LeftPbox = conv(left(p),q,op=ANDl);
 
     RhoRight = right(r);
     ANDr(x,y) = BooleanCopula(x,y,RhoRight);
-    RightPbox = conv(right(p),q,ANDr);
+    RightPbox = conv(right(p),q,op=ANDr);
 
     return env(LeftPbox,RightPbox)
 
@@ -139,12 +142,70 @@ function BCopPbox(p :: pbox, q :: pbox, r :: Union{Int64, Float64, Interval})
 
     RhoLeft = left(r);
     ANDl(x,y) = BooleanCopula(x,y,RhoLeft);
-    LeftPbox = conv(p,q,ANDl);
+    LeftPbox = conv(p,q,op=ANDl);
 
     RhoRight = right(r);
     ANDr(x,y) = BooleanCopula(x,y,RhoRight);
-    RightPbox = conv(p,q,ANDr);
+    RightPbox = conv(p,q,op=ANDr);
 
     return env(LeftPbox,RightPbox)
 end
 
+BCopPbox(p :: pbox, q ::FuzzyNumber, r :: Union{Int64, Float64,Interval}) = BCopPbox(p, makepbox(q), r)
+BCopPbox(p :: FuzzyNumber, q ::pbox, r :: Union{Int64, Float64,Interval}) = BCopPbox(makepbox(p),q, r)
+
+function BCopFuzzy(p :: Union{Int64, Float64,Interval}, q :: FuzzyNumber, r :: Union{Int64, Float64, Interval})
+
+    RhoLeft = left(r);
+    ANDl(x,y) = BCopInterval(x,y,RhoLeft);
+    LeftPbox = sigmaFuzzy(p,q,op=ANDl);
+
+    RhoRight = right(r);
+    ANDr(x,y) = BCopInterval(x,y,RhoRight);
+    RightPbox = sigmaFuzzy(p,q,op=ANDr);
+
+    return env(LeftPbox,RightPbox)
+end
+
+BCopFuzzy(p :: FuzzyNumber, q :: Union{Int64, Float64,Interval}, r :: Union{Int64, Float64, Interval}) = BCopFuzzy(q,p,r)
+
+function BCopFuzzy(p :: FuzzyNumber, q :: FuzzyNumber, r :: Union{Int64, Float64, Interval})
+
+    RhoLeft = left(r);
+    ANDl(x,y) = BCopInterval(x,y,RhoLeft);
+    LeftPbox = sigmaFuzzy(p,q,op=ANDl);
+
+    RhoRight = right(r);
+    ANDr(x,y) = BCopInterval(x,y,RhoRight);
+    RightPbox = sigmaFuzzy(p,q,op=ANDr);
+
+    return env(LeftPbox,RightPbox)
+end
+
+
+function andL(p :: FuzzyNumber, q :: FuzzyNumber, r :: Union{Int64, Float64, Interval})
+
+    RhoLeft = left(r);
+    ANDl(x,y) = BCopInterval(x,y,RhoLeft);
+    LeftPbox = levelwise(p,q,op=ANDl);
+
+    RhoRight = right(r);
+    ANDr(x,y) = BCopInterval(x,y,RhoRight);
+    RightPbox = levelwise(p,q,op=ANDr);
+
+    return env(LeftPbox,RightPbox)
+end
+
+
+function andF(p :: FuzzyNumber, q :: FuzzyNumber, r :: Union{Int64, Float64, Interval})
+
+    RhoLeft = left(r);
+    ANDl(x,y) = BCopInterval(x,y,RhoLeft);
+    LeftPbox = tauFuzzy(p,q,op=ANDl, C = W());
+
+    RhoRight = right(r);
+    ANDr(x,y) = BCopInterval(x,y,RhoRight);
+    RightPbox = tauFuzzy(p,q,op=ANDr, C = W());
+
+    return env(LeftPbox,RightPbox)
+end

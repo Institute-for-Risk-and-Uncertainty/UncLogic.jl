@@ -122,8 +122,11 @@ function Joint(x :: UncBool, y ::UncBool, corr = 0; plot = false)
     end
 
     if plot
-        println("                          | 0,0 | 0,1 | 1,0 | 1,1 |")
-        println("UncLogic  joint results = $probs")
+        println("Joint distribution: ")
+        println("| 0,0 |: $a")
+        println("| 0,1 |: $b")
+        println("| 1,0 |: $c")
+        println("| 1,1 |: $d")
     end
 
     return [a, b, c, d]

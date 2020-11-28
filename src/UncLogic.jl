@@ -27,7 +27,11 @@ using ProbabilityBoundsAnalysis, IntervalArithmetic, Distributions, StatsBase, L
 
 import Base: ~, !, <, >,==
 
-UncBool = Union{Bool, Int64, Float64, <:AbstractInterval, <: AbstractPbox}
+import ProbabilityBoundsAnalysis.isscalar
+
+include("../../FuzzyArithmetic.jl/src/FuzzyNumbers.jl")
+
+UncBool = Union{Bool, Int64, Float64, <:AbstractInterval, <: AbstractPbox, <: AbstractFuzzy}
 
 #global DefaultCorr = interval(-1,1);
 global DefaultCorr = 0;
@@ -42,10 +46,18 @@ isDual(x :: Interval) = x.hi < x.lo
 isDual(x :: Real) = false
 
 isequal(x :: pbox, y ::Union{Int64, Float64}) = false
-isequal(y ::Union{Int64, Float64}, x :: pbox,) = isequal(x, y)
+isequal(y ::Union{Int64, Float64}, x :: pbox) = isequal(x, y)
+
+isequal(x :: FuzzyNumber, y ::Union{Int64, Float64}) = false
+isequal(y ::Union{Int64, Float64}, x :: FuzzyNumber) = isequal(x, y)
+
+isscalar(x:: FuzzyNumber) = false
 
 ==(x :: pbox,y ::Union{Int64, Float64}) = isequal(x,y)
 ==(y ::Union{Int64, Float64}, x :: pbox) = isequal(y,x)
+
+==(x :: FuzzyNumber,y ::Union{Int64, Float64}) = isequal(x,y)
+==(y ::Union{Int64, Float64}, x :: FuzzyNumber) = isequal(y,x)
 
 isless(x :: pbox, y :: Union{Int64, Float64}) = cdf(x,y);
 isless(y :: Union{Int64, Float64},x :: pbox) = cdf(complement(x),y);
