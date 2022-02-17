@@ -22,6 +22,10 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      -
+        name: Install matplotlib
+        run: |
+          julia -e 'ENV["PYTHON"]=""; using Pkg; Pkg.add("Conda"); using Conda; Conda.add("matplotlib"); Pkg.add("PyCall"); Pkg.build("PyCall"); Pkg.add("PyPlot");'
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
