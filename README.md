@@ -7,7 +7,7 @@ Uncertain Boolean inputs may be given as:
   * Booleans: certain states 0 or 1 
   * Probabilities: uncertain states<img src="https://render.githubusercontent.com/render/math?math=\in[0,1]">
   * Interval probabilities:  uncertain states<img src="https://render.githubusercontent.com/render/math?math=\subseteq[0,1]">
-  * ~~Distributional and p-box probabilities~~
+  * Distributional and p-box probabilities
   
 Supported Boolean operations:
   * and, &
