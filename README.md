@@ -21,8 +21,12 @@ Installation
 ---
 
 **1. Downloading the source code**
-```julia
-julia> include("directory/of/source/src/UncLogic.jl")
-```
 
-Once installed, uncertain numbers can be created
+```
+> git clone https://github.com/AnderGray/UncLogic.jl.git
+> cd UncLogic
+> julia --project
+```
+```julia
+julia> using UncLogic
+```
