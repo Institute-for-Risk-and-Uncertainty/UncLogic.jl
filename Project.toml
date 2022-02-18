@@ -1,6 +1,6 @@
 name = "UncLogic"
 uuid = "f70411a3-7f6b-4c3f-b4be-04ad3c1ca97a"
-authors = ["Ander Gray <ander.gray@ukaea.uk>", "Enrique Miralles Dolz <E.Miralles-Dolz@liverpool.ac.uk>" ]
+authors = ["Ander Gray <ander.gray@ukaea.uk>", "Enrique Miralles Dolz <E.Miralles-Dolz@liverpool.ac.uk>"]
 version = "0.1.0"
 
 [deps]
@@ -10,3 +10,6 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PossibilisticArithmetic = "31822d60-0862-422f-9a3d-0eb9781332f3"
 ProbabilityBoundsAnalysis = "cd73f0b2-6f06-11ea-242f-83a09de6a7cf"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+
+[compat]
+IntervalArithmetic = "0.20"
