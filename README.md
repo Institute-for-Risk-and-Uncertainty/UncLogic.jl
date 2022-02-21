@@ -1,4 +1,5 @@
 # UncLogic.jl
+![Build Status](https://github.com/AnderGray/UncLogic.jl/workflows/CI/badge.svg)
 
 A julia package for pushing uncertainty through Boolean functions. This package may be used to construct uncertain boolean functions, such as fault or decision trees. Various types of uncertain Booleans are supported, with an uncertain dependency between the states.
 
