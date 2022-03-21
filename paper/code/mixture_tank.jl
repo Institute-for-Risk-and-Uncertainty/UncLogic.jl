@@ -81,7 +81,7 @@ println(frechet)
 
 plot_l(frechet, label = "Unknown dependence", name = "Mixture", col = "green")
 plot_l(mixed, name = "Mixture", col = "blue", label = "Mixed dependence")
-display(plot_l(indep, name = "Mixture", col = "red", label = "Known dependence"))
+display(plot_l(indep, name = "Mixture", col = "red", label = "Independence"))
 legend(fontsize = 25)
 PyPlot.xlim([0, 0.0003])
 PyPlot.ylim([0, 1])

@@ -80,7 +80,7 @@ println(frechet)
 
 plot_l(makepbox(frechet), label = "Unknown dependence", name = "Intervals", col = "green")
 plot_l(makepbox(mixed), name = "Intervals", col = "blue", label = "Mixed dependence")
-display(plot_l(makepbox(indep), name = "Intervals", col = "red", label = "Known dependence"))
+display(plot_l(makepbox(indep), name = "Intervals", col = "red", label = "Independence"))
 legend(fontsize = 25)
 PyPlot.xticks(range(0, 0.0003, length = 5), ["0", L"$0.75$", L"$1.5$", L"$2.25$", L"$3\times 10^{-4}$"])
 PyPlot.ylim([0, 1])
