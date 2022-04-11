@@ -9,8 +9,9 @@ is = range(0, 1,length=N)
 js = range(0, 1,length=N)
 
 rs = [-0.9999, -0.8, -0.4, 0.4, 0.8 , 0.9999]
+rs_plot = [-1, -0.8, -0.4, 0.4, 0.8 , 1]
 
-for r in rs
+for (i,r) in enumerate(rs)
 
     outs = [and(i, j, r) for i in is, j in js]
     C = copula(outs)
@@ -28,12 +29,10 @@ for r in rs
         t.label.set_fontsize(ft_ticks)
     end
 
-    if r == rs[1]; r == -1; end
-    if r == rs[end]; r == 1; end
-    PyPlot.title("r = $r", fontsize = fontsize)
+    PyPlot.title("ρ = $(rs_plot[i])", fontsize = fontsize)
     PyPlot.tight_layout()
-    savefig("copulas/cop_$r.png")
-    savefig("copulas/cop_$r.pdf")
+    savefig("copulas/cop_$(rs_plot[i]).png")
+    savefig("copulas/cop_$(rs_plot[i]).pdf")
     PyPlot.clf()
 
 end
