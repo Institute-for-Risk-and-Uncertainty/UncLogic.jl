@@ -1,0 +1,539 @@
+% This is samplepaper.tex, a sample chapter demonstrating the
+% LLNCS macro package for Springer Computer Science proceedings;
+% Version 2.20 of 2017/10/04
+%
+\documentclass[runningheads]{llncs}
+%
+\usepackage{subfig}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb, stmaryrd}
+\usepackage{tikz}
+
+% Used for displaying a sample figure. If possible, figure files should
+% be included in EPS format.
+%
+% If you use the hyperref package, please uncomment the following line
+% to display URLs in blue roman font according to Springer's eBook style:
+% \renewcommand\UrlFont{\color{blue}\rmfamily}
+
+\begin{document}
+%
+\title{Correlated Boolean Operators for Uncertainty Logic}
+%
+%\titlerunning{Abbreviated paper title}
+% If the paper title is too long for the running head, you can set
+% an abbreviated paper title here
+%
+\author{Enrique Miralles-Dolz\inst{1,2}\orcidID{0000-0003-2135-6084} \and 
+Ander Gray\inst{1,2}\orcidID{0000-0002-1585-0900} \and
+Edoardo Patelli\inst{3}\orcidID{0000-0002-5007-7247} \and
+Scott Ferson\inst{1}\orcidID{0000-0002-2613-0650}}
+%
+\authorrunning{Miralles-Dolz, Gray et al.}
+% First names are abbreviated in the running head.
+% If there are more than two authors, 'et al.' is used.
+%
+\institute{Institute for Risk and Uncertainty, University of Liverpool
+\email{\{enmidol,akgray,ferson\}@liverpool.ac.uk}\and
+United Kingdom Atomic Energy Authority
+\and
+Centre for Intelligent Infrastructure, University of Strathclyde\\
+\email{edoardo.patelli@strath.ac.uk}}
+%
+\maketitle              % typeset the header of the contribution
+%
+\begin{abstract}
+
+We present a correlated \textit{and} gate which may be used to propagate uncertainty and dependence through Boolean functions, since any Boolean function may be expressed as a combination of \textit{and} and \textit{not} operations.
+We argue that the \textit{and} gate is a bivariate copula family, which has the interpretation of constructing bivariate Bernoulli random variables following a given Pearson correlation coefficient and marginal probabilities. We show how this copula family may be used to propagate uncertainty in the form of probabilities of events, probability intervals, and probability boxes, with only partial or no knowledge of the dependency between events, expressed as an interval for the correlation coefficient. These results generalise previous results by Fréchet on the conjunction of two events with unknown dependencies. We show an application propagating uncertainty through a fault tree for a pressure tank. This paper comes with an open-source Julia library for performing uncertainty logic.
+
+\keywords{imprecise probability \and uncertainty logic  \and Boolean functions \and uncertainty propagation \and copula}
+\end{abstract}
+%
+%
+%
+\section{Introduction}
+
+The logical conjunction ($\cap$) is a function $f:\{0,1\}^2 \rightarrow{\{0,1\}}$ that returns a value of 1 if and only if
+both of the inputs are 1.
+This function is fully defined in $2^2$ operations, as shown in Table 1.
+%
+\begin{table}
+\centering
+\caption{Truth table of the logical conjunction in Boolean algebra.}\label{tab1}
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{A} & \textbf{B} & \textbf{A($\cap$)B} \\ \hline
+0 & 0 & 0 \\ \hline
+1 & 0 & 0 \\ \hline
+0 & 1 & 0 \\ \hline
+1 & 1 & 1 \\ \hline
+\end{tabular}
+\end{table}
+%
+\noindent The logical values assigned to the inputs represent the truth value of certain propositions or events, and in Boolean algebra it
+is required absolute certainty about these truth values (i.e. they are either \textit{true} (1) or \textit{false} (0)).
+However, this requirement is often too restrictive to be used in practical applications where this certainty is expressed in the
+form of probabilities, and therefore an extension from \{0,1\} to [0,1] would be desirable.
+
+Note that it is possible to build any binary Boolean operation from two primitive operations, for example from \textit{and} and \textit{not}. Table \ref{Tabel1} shows the 16 ($2^4$) possible binary and unary Boolean operations, written in terms of two primitives operations $\cap$ and $\neg$. Note that some of these operations (e.g. Identity and Zero) are trivial, and with the other operations being written in terms of previously derived operations for brevity. Since all of these operations may be written in terms of an $\cap$ and a $\neg$ operation, and since the \textit{not} operation is $not(A) = \neg A = 1 - A$, it follows that we therefore only need to describe a correlated \textit{and} operator, and all other binary operators, and further more complicated Boolean functions, may be calculated in terms of these two operators.
+%
+\begin{table}[!h]
+\centering
+\caption{Summary of the 16 possible binary and unary Boolean operations written in terms of two primitive operations $\cap$ and \neg.}
+\resizebox{1.1\textwidth}{!}{\begin{tabular}{ |c|c|c|c|c|c|c| }
+\hline
+    $A$ & $1 1 0 0$  & Adopted Name & Adopted Symbol & Expansion & Other symbols & Other names\\ 
+    $B$ & $1 0 1 0$  &  &  & & &\\ 
+ \hline
+ $w_{1}$ & $1 1 0 0$ & Identity & $A$ & trivial &  & Assertion\\ 
+ $w_{2}$ & $1 0 1 0$ & Identity & $B$ & trivial &  & Assertion\\ 
+ $w_{3}$ & $0 0 0 0$ & Zero & 0 & trivial & \textit{\textbf{F}}, $\bot$ & Falsum\\ 
+ $w_{4}$ & $1 1 1 1$ & One & 1 & trivial & \textit{\textbf{T}}, \textit{\textbf{I}} &  Verum\\ 
+ $w_{5} $ & $1 0 0 0$ & And & $A\&B$ & primitive & $A\land B, A \cap B, A*B$ & Conjunction\\ 
+ $w_{6} $ & $0 0 1 1$ & Not & $\neg A$ & $1 - A$ & $\sim A, \overline{A}, A', A^c$ & Negation, Complement\\ 
+ $w_{7} $ & $0 1 0 1$ & Not & $\neg B$ & $1 - B$ & $\sim B, \overline{B}, B', B^c$ & Negation, Complement\\ 
+ $w_{8} $ & $1 1 1 0$ & Or & $A$ or $B$ & $\neg((\neg A) \& (\neg B))$ & $A\lor B, A \cup B, A + B$  & Disjunction\\ 
+ $w_{9} $ & $0 1 1 1$ & Nand & $A$ nand $B$ & $\neg(A \& B)$ & $A | B, A \uparrow B, A \barwedge B$  & Sheffer stroke\\ 
+ $w_{10}$ & $0 0 0 1$ & Nor & $A$ nor $B$ & $\neg(A$ or $B)$ & $A \downarrow B, A \veebar B$  & Pierce\\ 
+ $w_{11}$& $0 1 1 0$ & Exclusive Or  & $A$ xor $B$ & $(A$ or $B)\& (A$ nand $B)$ & $A \oplus B, A \not\equiv B$ & Nonequivalence\\ 
+ $w_{12}$ & $1 0 0 1$ & Equivalence  & $A\equiv B$ &  $\neg (A$ xor $B)$ & $A \Leftrightarrow B, A := B$ & Biconditional\\ 
+ $w_{13}$& $1 0 1 1$ & Implication & $A\implies B$ &  $\neg A$ or $B$ & $B \subset A$, $A \leq B$  & Inequality\\ 
+ $w_{14}$ & $1 1 0 1$ & Implication &  $B \implies A$ &  $A$ or  $\neg B$ & $A \subset B$, $B \leq A$  & Inequality\\ 
+ $w_{15}$&  $0 1 0 0$ &  Inhibition & $A \Longmapsto B$ &  $\neg (A \implies B)$ & $A < B$  & Proper inequality \\ 
+ $w_{16}$ & $0 0 1 0$ &  Inhibition & $B \Longmapsto A$ & $\neg (B \implies A)$ &  $B < A$ & Proper inequality\\ 
+ \hline
+\end{tabular}}
+\label{Tabel1}
+\end{table}
+%
+When the truth values are represented by probabilities, the probability of the conjunction $\mathbb{P}(A \cap B)$ is calculated
+using the definition of conditional probability as $\mathbb{P}(A \cap B) = \mathbb{P}(A) \cdot \mathbb{P}(B|A) = \mathbb{P}(B) \cdot \mathbb{P}(A|B)$.
+Under this definition it is easy to show that, when $A$ and $B$ are independent (i.e. $\mathbb{P}(A|B) = \mathbb{P}(A)$ and vice versa), the
+conjunction is the product $\mathbb{P}(A) \cdot \mathbb{P}(B)$ (which is also the definition of independent events).
+
+However, again in real world applications the assumption of independence could be too restrictive, so deriving a logical
+conjunction function which takes into account the dependence of the events would be advantageous.
+In \cite{lucas1995default}, it is derived a model for the conjunction employing the Pearson correlation coefficient to capture dependence (referred to as the Lucas model). Unlike for continuous distributions, two marginals and a correlation coefficient is sufficient to completely define a bivariate Bernoulli random variable \cite{joe1997multivariate}.
+
+The Pearson correlation coefficient is defined as:
+\begin{equation}
+\rho(A,B) = \frac{\text{Cov}[A,B]}{\sigma(A) \cdot \sigma(B)}
+\end{equation}
+
+\noindent where $\sigma$ is the standard deviation, and $\text{Cov}[A,B]$ is the covariance of A and B defined as:
+
+\begin{equation}
+\text{Cov}[A,B]= \mathbb{P}(A \cap B) - \mathbb{P}(A) \cdot \mathbb{P}(B)
+\end{equation}
+
+ Since the events under consideration are binomial, according to the law of excluded middle $\mathbb{P}(\neg A) = 1 - \mathbb{P}(A)$ and the standard deviation of a binomial event can therefore be defined as:
+
+\begin{equation}
+    \sigma(A) = \sqrt{\mathbb{P}(A)\mathbb{P}(\neg A)}
+\label{std}
+\end{equation}
+
+Substituting Equation 3 and 2 in Equation 1, the conjunction of two correlated events A and B with the Lucas model is:
+
+\begin{equation}
+%\boxed{
+    \mathbb{P}(A \cap B) = \mathbb{P}(A)\mathbb{P}(B) + \rho(A,B)\sqrt{\mathbb{P}(A)\mathbb{P}(\neg A)\mathbb{P}(B)\mathbb{P}(\neg B)}
+%}
+\end{equation}
+
+However, this model can return misleading results when certain combinations of probabilities of events and correlations are employed.
+For example, defining $\mathbb{P}(A) = 0.3$ and $\mathbb{P}(B)=0.2$ with $\rho(A,B) = -1$ (i.e. opposite dependence), Lucas model returns $\mathbb{P}(A \cap B) = -0.123$, which is obviously erroneous.
+The fact that Equation 4 is returning a negative probability is simply because the probability assigned for events A and B cannot have a correlation of -1.
+This means that, for some probabilities of events, the Pearson correlation coefficient cannot take any value in [-1, 1], but in some subset $S \subseteq [-1,1]$.
+
+This subset $S$ can be found through the Fréchet inequalities, which define the lower and upper bound of the logical conjunction given the probability of its events, and are written as:
+
+\begin{equation}
+    \mathbb{P}(A \cap B) \in [\max(\mathbb{P}(A)+\mathbb{P}(B)-1, 0), \min(\mathbb{P}(A),\mathbb{P}(B))]
+\end{equation}
+
+Substituting the bounds in Equation 4, and rearranging for $\rho(A,B)$, the subset $S = [\underline\rho(A,B),\overline\rho(A,B)] \subseteq [-1,1]$ can be found as:
+
+\begin{equation}
+    \begin{cases}
+      \underline{\rho}(A,B) = \frac{\max(\mathbb{P}(A)+\mathbb{P}(B)-1,0) - \mathbb{P}(A)\mathbb{P}(B)}{\sqrt{\mathbb{P}(A)\mathbb{P}(\neg A)\mathbb{P}(B)\mathbb{P}(\neg B)}}\\
+      \\
+      \overline{\rho}(A,B) = \frac{\min(\mathbb{P}(A),\mathbb{P}(B)) - \mathbb{P}(A)\mathbb{P}(B)}{\sqrt{\mathbb{P}(A)\mathbb{P}(\neg A)\mathbb{P}(B)\mathbb{P}(\neg B)}}\\
+    \end{cases}       
+\end{equation}
+
+\noindent With these definitions for the lower and upper bound of the Pearson correlation coefficient, the subset S for the previous example with $\mathbb{P}(A) = 0.3$ and $\mathbb{P}(B) = 0.2$ is [-0.327, 0.763], and not [-1,1] as previously guessed.
+
+The correlated \textit{and} operation proposed combines the Lucas model and the Fréchet inequalities to restrict the former to return probabilities in [0,1] for any specified Pearson correlation.
+If the introduced correlation is greater than $\overline\rho$, then the upper Fréchet bound is returned.
+On the other hand, if it is lower than $\underline\rho$, then the model gives the lower Fréchet bound.
+Lastly, when the introduced correlation is in $S$, then the probability is calculated following the Lucas model.
+Therefore, the correlated \textit{and} operator is written as:
+
+\begin{equation}
+%\boxed{
+\mathbb{P}(A \cap B) = \\
+\begin{cases}
+  \max(\mathbb{P}(A) + \mathbb{P}(B) -1, 0) \qquad \qquad \text{ if } \rho(A,B) \le \underline{\rho}(A,B) \\
+  \min(\mathbb{P}(A),\mathbb{P}(B)) \qquad \qquad\qquad\qquad \text{ if } \rho(A,B) \ge \overline{\rho}(A,B) \\
+  \mathbb{P}(A)\mathbb{P}(B) + \rho(A,B)\sqrt{\mathbb{P}(A)\mathbb{P}(\neg A)\mathbb{P}(B)\mathbb{P}(\neg B)} \text{ otherwise}
+\end{cases}
+%}
+\end{equation}
+
+We present an extension for the Boolean operators allowing for uncertainty not only in the inputs, but also in the dependence, which now can be specified for any interval correlation $\rho \subseteq [-1, 1]$, having the Fréchet bounds as a special case when $\rho = [-1,1]$. Functions of Bernoulli random variables with uncertainty in dependence generally yield interval probabilities, we thus show how intervals may also be propagated through the derived operations. 
+
+% The paper is organised as follows: in section 2 we argue that the derived \textit{and} operator is a bivariate copula family, section 3 and 4 explain how interval probabilities and probability boxes can be propagated through the copula family, and section 5 shows an application calculating the probability of failure of a pressure tank system, followed by the conclusion in section 6.
+
+
+\section{Correlated \textit{and} as a Copula}
+
+In this section we argue that the above derived correlated \textit{and} is a bivariate copula (2-copula) family, parameterised by a correlation coefficient $\rho$. Rewritten in a more standard copula notation:
+\begin{equation*}
+  C_{\rho}(u,v) =
+    \begin{cases}
+      W(u,v) & \text{if } \rho \le \underline{\rho}_{uv} \\
+      M(u,v)& \text{if } \rho \ge \overline{\rho}_{uv} \\
+      uv + \rho\sqrt{u(1- u)v(1- v)}& \text{otherwise}
+    \end{cases}
+\end{equation*}
+
+
+\noindent A 2-copula $C$ is any function $C:[0,1]^2 \rightarrow [0,1]$ with the following properties:
+
+\begin{enumerate}
+  \item Grounded: $C(0,v) = C(u,0) = 0$,
+  \item Uniform margins: $C(u,1) = u; \;C(1,v) = v$,
+  \item 2-increasing: \\ $C(u_{2},v_{2}) - C_{}(u_{2}, v_{1}) - C(u_{1}, v_{2}) + C(u_{1}, v_{1}) \ge 0$\\ for all $0 \le u_{1} \le u_{2} \le 1$ and $0 \le v_{1} \le v_{2} \le 1$.
+\end{enumerate}
+% cite A new characterization of bivariate copulas here
+\noindent It is easy to see that the first two properties hold. The third property is harder to demonstrate, and in this work we provide no proof, despite the Lucas model $uv + \rho\sqrt{u(1- u)v(1- v)}$ is non-decreasing in $u$ and $v$. However, non-decreasing is a necessary but not sufficient criteria for 2-increasing \cite{schweizer2011probabilistic}. Yet Durante and Jaworski \cite{durante2010new}  prove that $C$ is a copula iff it satisfies criteria 1. and 2. and if the partial derivatives are increasing (Corollary 2.4). That is, for every $x \in \mathbb{I}$,
+\begin{equation*}
+    v \mapsto \frac{\delta C(u,v)}{\delta u}
+\end{equation*}
+\noindent is increasing on $\mathbb{I}$. The partial derivatives of the above \textit{and} gate is
+
+\begin{equation*}
+\frac{\delta C_{\rho}(u,v)}{\delta u} = 
+\begin{cases}
+  0 & \text{if } \rho(A,B) \le \underline{\rho}(A,B) \\
+  1 & \text{if } \rho(A,B) \ge \overline{\rho}(A,B) \\
+  v + \rho \frac{v(1-u)(1-v) - uv(1-v)}{2\sqrt{uv(1-u)(1-v)}} & \text{otherwise}
+\end{cases}
+
+\end{equation*}
+
+\noindent which from observation $C_{\rho}$ follows. Figure \ref{fig:copulas} shows $C_{\rho}(u,v)$ for various values of $\rho$. If $C_{\rho}(u,v)$ is a copula family, then it is a \textit{complete} copula family, as it includes the two Frechet bounds $W$ and $M$, corresponding to minimal (when $\rho = -1$) and maximal (when $\rho = 1$) correlation respectively, and the independence copula $\Pi(u,v) = uv$ when $\rho = 0$.
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.32\textwidth]{figures/copulas/cop_-1.pdf}
+    \includegraphics[width=0.32\textwidth]{figures/copulas/cop_-0.8.pdf}
+    \includegraphics[width=0.32\textwidth]{figures/copulas/cop_-0.4.pdf}
+    \includegraphics[width=0.32\textwidth]{figures/copulas/cop_0.4.pdf}
+    \includegraphics[width=0.32\textwidth]{figures/copulas/cop_0.8.pdf}
+    \includegraphics[width=0.32\textwidth]{figures/copulas/cop_1.pdf}
+    
+    \caption{$C_\rho(u,v)$ for $\rho=\{-1, -0.8, -0.4, 0.4, 0.8, 1\}$}
+    \label{fig:copulas}
+\end{figure}
+
+\noindent For the main results of this paper it is not required that the presented operator is a copula, only that it is non-decreasing. However it is interesting since t-norms, which are similar functions to copulas, are widely used in fuzzy logic to model \textit{and} operations \cite{klir1987fuzzy}. The interpretation of t-norms in fuzzy logic is often unclear, whilst the presented $C_{\rho}$ has a clear probabilistic interpretation. Given two marginal Bernoulli random variables with $\mathbb{P}(A)$ and $\mathbb{P}(B)$, and Pearson correlation coefficient $\rho$, $C_{ \rho}(\mathbb{P}(A), \mathbb{P}(B))$ returns the joint probability of events $A$ and $B$ occurring, i.e. $\mathbb{P}(A=1, B=1)$, which is one element of the joint probability of the bivariate Bernoulli distribution, with the other elements being $\mathbb{P}(A=1, B=0)$, $\mathbb{P}(A=0, B=1)$, and $\mathbb{P}(A=0, B=0)$.
+
+\section{Interval probabilities}
+
+Since $C_{\rho}(u,v)$ is non-decreasing in $u$ and $v$, interval values for $u$ and $v$ can be simply evaluated with endpoints. Moreover, in $C_{\rho}(u,v)$ the correlation $\rho$ only has a single occurrence, and so it can be evaluated exactly with interval arithmetic. However, a useful observation is that $C_{\rho}(u,v)$ is also non-decreasing in $\rho$. From Figure \ref{fig:copulas} it can be seen that increasing $\rho$ yields larger or equal values of joint probabilities, i.e. $C_{\rho_{1}} \leq C_{\rho_{2}}$ for $\rho_1 \leq \rho_2$, and therefore interval uncertainty in $\rho$ may also be evaluated with endpoints. Therefore, given two events with interval probabilities $u = [\underline{u}, \overline{u}]$ and $v =[\underline{v}, \overline{v}]$, and partially known correlation $\rho = [\underline{\rho}, \overline{\rho}]$, the interval probability of their conjunction can be evaluated as
+
+\begin{align*}
+    \underline{\mathbb{P}}(u=1, v = 1) &= C_{\underline{\rho}}(\underline{u}, \underline{v}) ,\\
+    \overline{\mathbb{P}}(u=1, v = 1) &= C_{\overline{\rho}}(\overline{u}, \overline{v}) .
+\end{align*}
+
+\noindent As an example, for $u = [0.2,0.3]$, $v = [0.45,0.6]$ and $\rho =[ -0.2, 0.4]$, rigorous bounds on their conjunction can be calculated as $\mathbb{P}(u = 1, v =1) = [0.0502, 0.2417]$.
+
+The full joint probability distribution of the bivariate Bernoulli can also be found by noticing that, for example, $\mathbb{P}(u =1, v = 0) = \mathbb{P}(u \cap \neg v)$, with the \textit{not} operator defined as $\neg v = 1 - v$, which may be evaluated with $C_{\rho}$. However, some careful consideration is required regarding the correlation coefficient. If probabilities $u$ and $v$ have correlation $\rho_{uv}$, then $u$ and $1-v$ will have $\rho_{u\neg v} = -1 * \rho_{uv}$ \cite{nelsen2007introduction}, i.e. when complementing an event, the correlation must be reversed. The other elements of the joint distribution of the bivariate Bernoulli can be calculated as
+
+\begin{align*}
+   \mathbb{P}(u=1, v = 0) &= C_{-1*\rho}(u, 1 - v) ,\\
+    \mathbb{P}(u=0, v = 1) &= C_{-1*\rho}(1 - u, v) ,\\
+    \mathbb{P}(u=0, v = 0) &= C_{\rho}(1- u, 1 - v) .\\
+\end{align*}
+
+\noindent Notice that when the probabilities are complemented twice, the correlation stays the same, since it has been negated twice: $\rho_{\neg u, \neg v} = -(-\rho_{uv}) = \rho_{uv}$. Table \ref{tab:joint_bernoulli} shows the computed joint distribution using the previous example of $u = [0.2,0.3]$, $v = [0.45,0.6]$ and $\rho =[ -0.2, 0.4]$.
+
+\begin{table}[t!]
+\centering
+\caption{Interval bounds on the joint probability of a bivariate Bernoulli with marginals $\mathbb{P}(u=1) = [0.2, 0.3]$ , $\mathbb{P}(v=1) = [0.45, 0.5]$ and interval correlation $\rho = [ -0.2, 0.4]$.}
+\resizebox{0.6\textwidth}{!}{%
+\begin{tabular}{c|cc|c}
+\hline
+$\mathbb{P}(u, v)$ & 0        & 1        &    $\mathbb{P}(v)$      \\ \hline
+0           & $[0.304, 0.52]$ & $[0.223, 0.44]$ & $[0.7, 0.8]$ \\
+1           & $[0.02, 0.2106]$ & $[0.0502, 0.2417]$ & $[0.2, 0.3]$ \\ \hline
+$\mathbb{P}(u)$  & $[0.5, 0.55]$ & $[0.45, 0.5]$ &        \\ \hline
+\end{tabular}%
+}
+\label{tab:joint_bernoulli}
+\end{table}
+
+\subsection{Other Boolean operations}
+
+Once a correlated $and$ operation has been constructed, other correlated Boolean operations can be defined in terms of this operation and a \textit{not}, shown in Table \ref{Tabel1}. For example, \textit{or} can be defined as
+
+\begin{equation*}
+    A \text{ or } B = \mathbb{P}(A \cup B) = 1 - \mathbb{P}((1 -A) \cap (1-B)),
+\end{equation*}
+
+\noindent which may be written in terms of $C_{\rho}$ is
+
+\begin{equation}
+    A \text{ or } B = 1 - C_{\rho}(1-A,1-B).
+\end{equation}
+
+\noindent The other operations can be similarly expanded, taking care to negate the correlation coefficient appropriately.
+
+\section{Probability Boxes}
+
+Since $C_{\rho}$ is a non-decreasing binary operator, it can also be readily evaluated with p-box arithmetic. Given two random variables with distribution functions $F_{X}$ and $F_{Y}$, correlated by copula $C_{X,Y}$, a binary operation $Z= f(X,Y)$ can be evaluated with the following Lebesgue-Stieltjes integral: 
+
+\begin{equation*}
+  F_{Z}(z) = \int_{f\{z\}}dC_{X,Y}(F_{X}(x),F_{Y}(y)) ,
+\end{equation*}
+
+\noindent where the integration domain is the set $f\{z\} = \{(x,y)| x,y \in \mathbb{R}, f(x,y) < z\}$ (the set of all $x$ and $y$ for which $f(x,y) < z$). Note that the copula $C_{XY}$ is not the same copula used to define the correlated \textit{and} operation $C_{\rho}$, where $C_{XY}$ defines the dependence between the random variables $X$ and $Y$ (which defines the uncertainty we have about the events), and $C_{\rho}$ defines the correlation between the events themselves.
+
+\noindent Inserting $f = C_{\rho}$ into the above equation, and since the operation is non-decreasing we have
+
+
+\begin{align}
+    \underline{F_{Z}}(z) &= \int_{C_{\underline{\rho}}}dC_{X,Y}(\underline{F}_{X}(x), \underline{F}_{Y}(y))
+    , \label{eq:pbox_and1} \\
+    \overline{F_{Z}}(z) &= \int_{C_{\overline{\rho}}}dC_{X,Y}(\overline{F}_{X}(x), \overline{F}_{Y}(y)) .
+    \label{eq:pbox_and2}
+\end{align}
+
+
+\noindent for two p-boxes $X = [\underline{F}_{X}, \overline{F}_{X}]$, $Y = [\underline{F}_{Y}, \overline{F}_{Y}]$, and interval correlation $\rho = [\underline{\rho}, \overline{\rho}]$. Software for performing rigorous correlated p-box arithmetic is readily available for bounding the above integrals efficiently \cite{gray2021probabilityboundsanalysis}. The above integrals are those usually used in p-box arithmetic, except that the binary operation $C_{\rho}$ is parameterised by $\rho$, which could be an interval. In the interval case, the envelope of the two end points yields the bounds on the output p-box. Figure \ref{fig:pbox_ands} shows equations \eqref{eq:pbox_and1} and  \eqref{eq:pbox_and2} evaluated for two K out of N c-boxes \cite{ferson2014computing} $X \sim \text{KN}(5,6)$, $Y \sim \text{KN}(16,20)$ for different values of event correlations, shown in different colours. The right figure shows logical \textit{and} with an interval correlation $\rho = [0.5,1]$, which is the envelope of the purple and orange c-boxes. Note that independence was used in the upper level throughout.
+
+\begin{figure}[t!]
+    \centering
+
+\tikzset{every picture/.style={line width=0.75pt}} %set default line width to 0.75pt        
+
+\begin{tikzpicture}[x=0.75pt,y=0.75pt,yscale=-1,xscale=1]
+%uncomment if require: \path (0,358); %set diagram left start at 0, and has height of 358
+
+%Image [id:dp2045605012094952] 
+\draw (216,185) node  {\includegraphics[width=180pt,height=172.5pt]{figures/correlated.pdf}};
+%\draw (216,185) node  {\includegraphics[width=0.49\textwidth]{figures/correlated.pdf}};
+%Image [id:dp6222560512912088] 
+\draw (450,185) node  {\includegraphics[width=180pt,height=172.5pt]{figures/cor_env.pdf}};
+%\draw (485,185) node  {\includegraphics[width=0.49\textwidth]{figures/cor_env.pdf}};
+%Curve Lines [id:da024634057019045197] 
+\draw [color={rgb, 255:red, 255; green, 0; blue, 30 }  ,draw opacity=1 ][line width=1.5]    (156,90) .. controls (151.52,115.8) and (138.15,137.3) .. (136,150) .. controls (133.88,162.51) and (115.89,201.31) .. (154.21,257.42) ;
+\draw [shift={(156,260)}, rotate = 234.73] [fill={rgb, 255:red, 255; green, 0; blue, 30 }  ,fill opacity=1 ][line width=0.08]  [draw opacity=0] (13.4,-6.43) -- (0,0) -- (13.4,6.44) -- (8.9,0) -- cycle    ;
+%Curve Lines [id:da5455372092026755] 
+\draw [color={rgb, 255:red, 39; green, 110; blue, 193 }  ,draw opacity=1 ][line width=1.5]    (176,120) .. controls (152.69,159.89) and (149.43,168.25) .. (184.38,246.38) ;
+\draw [shift={(186,250)}, rotate = 245.78] [fill={rgb, 255:red, 39; green, 110; blue, 193 }  ,fill opacity=1 ][line width=0.08]  [draw opacity=0] (13.4,-6.43) -- (0,0) -- (13.4,6.44) -- (8.9,0) -- cycle    ;
+%Curve Lines [id:da9685059451654009] 
+\draw [color={rgb, 255:red, 78; green, 133; blue, 17 }  ,draw opacity=1 ][line width=1.5]    (196,150) .. controls (193.41,180.56) and (192.39,190.88) .. (213.94,226.61) ;
+\draw [shift={(216,230)}, rotate = 238.42] [fill={rgb, 255:red, 78; green, 133; blue, 17 }  ,fill opacity=1 ][line width=0.08]  [draw opacity=0] (13.4,-6.43) -- (0,0) -- (13.4,6.44) -- (8.9,0) -- cycle    ;
+%Curve Lines [id:da22185516587076848] 
+\draw [color={rgb, 255:red, 197; green, 124; blue, 1 }  ,draw opacity=1 ][line width=1.5]    (296,200) .. controls (295.35,173.33) and (305.68,157.47) .. (269.49,168.86) ;
+\draw [shift={(266,170)}, rotate = 341.49] [fill={rgb, 255:red, 197; green, 124; blue, 1 }  ,fill opacity=1 ][line width=0.08]  [draw opacity=0] (13.4,-6.43) -- (0,0) -- (13.4,6.44) -- (8.9,0) -- cycle    ;
+%Curve Lines [id:da6636081806820782] 
+\draw [color={rgb, 255:red, 144; green, 19; blue, 254 }  ,draw opacity=1 ][line width=1.5]    (296,250) .. controls (300.16,230.32) and (287.42,235.06) .. (259.56,230.61) ;
+\draw [shift={(256,230)}, rotate = 10.28] [fill={rgb, 255:red, 144; green, 19; blue, 254 }  ,fill opacity=1 ][line width=0.08]  [draw opacity=0] (13.4,-6.43) -- (0,0) -- (13.4,6.44) -- (8.9,0) -- cycle    ;
+
+% Text Node
+\draw (134,72.4) node [anchor=north west][inner sep=0.75pt]    {$\textcolor[rgb]{1,0,0}{\rho \ =\ -1}$};
+% Text Node
+\draw (157,102.4) node [anchor=north west][inner sep=0.75pt]    {$\textcolor[rgb]{0.15,0.43,0.76}{\rho \ =\ -0.5}$};
+% Text Node
+\draw (175,132.4) node [anchor=north west][inner sep=0.75pt]    {$\textcolor[rgb]{0.31,0.54,0.07}{\rho \ =\ 0}$};
+% Text Node
+\draw (264,202.4) node [anchor=north west][inner sep=0.75pt]    {$\textcolor[rgb]{0.77,0.49,0}{\rho \ =\ 0.5}$};
+% Text Node
+\draw (272,252.4) node [anchor=north west][inner sep=0.75pt]    {$\textcolor[rgb]{0.56,0.07,1}{\rho \ =\ 1}$};
+% Text Node
+\draw (400,72.4) node [anchor=north west][inner sep=0.75pt]  [font=\large]  {$\textcolor[rgb]{0,0,0}{\rho \ =\ [ 0.5,\ 1]}$};
+
+
+\end{tikzpicture}
+
+    
+    \caption{\textbf{(Left)} Show logical \textit{and} between the two K out of N c-boxes $X \sim \text{KN}(5,6)$, $Y \sim \text{KN}(16,20)$ for different values of precise correlation. \textbf{(Right)} shows logical \textit{and} with the interval correlation $\rho = [0.5,1]$, and is the envelope of the orange and purple c-boxes. Independence is used in the upper level throughout $C_{XY} = \Pi$.}
+    \label{fig:pbox_ands}
+\end{figure}
+
+%\subsection{Two level dependence}
+
+\section{Application}
+
+In fault tree analysis, Boolean operators are employed to calculate a system's probability of failure.
+These are useful to, for example, understand what are the most likely routes of failure, show compliance with the reliability requirements, or designing monitoring strategies.
+To carry out these analyses it is required to define an event tree, where the connections between events are made with Boolean operators, with their respective event probabilities and dependencies.
+Then, the Boolean operators are calculated backwards from the top event to find its probability of failure.
+
+Figure 3 represents a fault tree for a pressure tank system, derived in \cite{vesely1981fault,ferson2015dependence}.
+It displays the Boolean operators $\cap$ (AND) and $\cup$ (OR) connecting the failure events $E_i$ (with $E_1$ being the top event), and the system components tank (T), relay (K2), pressure switch (S), on-switch (S1), timer relay (R), and relay (K1).
+For the sake of brevity, the function of these components will not be explained in this paper.
+
+\begin{figure}[!ht]
+    \centering
+    \includegraphics[width=0.8\textwidth]{figures/Untitled Diagram.pdf}   \caption{Fault tree diagram for the pressure tank system.}
+    \label{fig:my_label}
+\end{figure}
+
+To measure the probability of failure of  the system (event $E_1$), it is necessary to estimate the failure rates for its components T, K2, S, S1, R and K1, and the dependence of the events in the Boolean operations.
+The most common method of calculation, as in \cite{vesely1981fault}, is to calculate the probability of failure assuming independence and known rates of failure for the components.
+In \cite{ferson2015dependence}, they relaxed these assumptions by including some known/unknown dependence, and extending the point probabilities to intervals, showing that the assumptions in \cite{vesely1981fault} underestimate the probability of failure.
+To demonstrate the capabilities of the method derived in this paper, two scenarios on the components probability of failure will be calculated, with three dependence cases for each (independence, mixed dependence, and unknown dependence):
+
+\begin{enumerate}
+    \item An interval scenario, where the probability of failure of the components is modeled as intervals.
+    \item A p-box scenario, which generalises \cite{ferson2015dependence} combining p-boxes and intervals. The probabilities of failure of the relays (K1, K2, and R) have been extended to follow a K out of N c-box \cite{ferson2014computing}. 
+\end{enumerate}
+
+\noindent The specific values for each scenario and dependence are indicated in Table 4 and 5 respectively.
+
+\begin{table}[]
+\centering
+\caption{Probability of failure for the tank pressure system components. In the interval scenario, all probabilities are modeled in the form of intervals. In the p-box scenario, tank and switches have an interval probability, whilst the relays follow a K out of N c-box.}\label{tab1}
+\begin{tabular}{|c|c|c|}
+\hline
+Component & Interval scenario            & P-box scenario                           \\ \hline
+T         & ${[}4.5x10^{-6}, 5.5x10^{-6}{]}$ & ${[}4.5x10^{-6}, 5.5x10^{-6}{]}$              \\ \hline
+K2        & ${[}2.5x10^{-5}, 3.5x10^{-5}{]}$ & $KN(3,10^5)$ \\ \hline
+S         & ${[}0.5x10^{-4}, 1.5x10^{-4}{]}$ & ${[}0.5x10^{-4}, 1.5x10^{-4}{]}$              \\ \hline
+K1        & ${[}2.5x10^{-5}, 3.5x10^{-5}{]}$ & $KN(3,10^5)$ \\ \hline
+R         & ${[}0.5x10^{-4}, 1.5x10^{-4}{]}$ & $KN(1,10^4)$ \\ \hline
+S1        & ${[}2.5x10^{-5}, 3.5x10^{-5}{]}$ & ${[}2.5x10^{-5}, 3.5x10^{-5}{]}$              \\ \hline
+\end{tabular}
+\end{table}
+
+\begin{table}[!ht]
+\centering
+\caption{Dependence in the system's events for the three different cases: independence, mixed dependence, and unknown dependence.}\label{tab1}
+\begin{tabular}{|c|c|c|c|}
+\hline
+ Event  & Independence & Mixed Dependence                         & Unknown Dependence                       \\ \hline
+$E_1$ & $\rho = 0$   & $\rho = 0$                               & $\rho = [-1, 1]$ \\ \hline
+$E_2$ & $\rho = 0$   & $\rho = [\underline\rho, \overline\rho]$ & $\rho = [-1, 1]$ \\ \hline
+$E_3$ & $\rho = 0$   & $\rho = 0.15$                            & $\rho = [-1, 1]$ \\ \hline
+$E_4$ & $\rho = 0$   & $\rho = [-0.2, 0.2]$                               & $\rho = [-1, 1]$ \\ \hline
+$E_5$ & $\rho = 0$   & $\rho = 1$                               & $\rho = [-1, 1]$ \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Interval scenario}
+
+On the left of Figure 4 it is shown the probability of failure $E_1$ for the interval scenario, where the red area belongs to the independence case, blue to the mixed dependence case, and green to the unknown dependence.
+It is possible to see how the uncertainty increases as the dependence assumptions are removed from the Boolean operations.
+Intervals for the probability of $E_1$ are indicated in Table 6.
+
+\begin{table}[!th]
+\centering
+\caption{Probability of $E_1$ in the interval scenario.}\label{tab1}
+\begin{tabular}{|c|c|}
+\hline
+Case               & $\mathbb{P}(E_1)$                   \\ \hline
+Independence       & ${[}2.950x10^{-5}, 4.053x10^{-5}{]}$ \\ \hline
+Mixed Dependence   & ${[}2.949x10^{-5}, 6.551x10^{-5}{]}$ \\ \hline
+Unknown Dependence & ${[}2.499x10^{-5}, 1.905x10^{-4}{]}$  \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{P-box scenario}
+
+The results in the P-box scenario are more complicated to interpret since the calculations are probabilities of the probability of the event $E_1$.
+However, meaningful analyses can be drawn from them.
+For example, assuming the required failure probability of the tank system is no more than $10^{-4}$, a possible question could be what is the probability of it being lower or equal than $10^{-4}$, or how likely is the system to comply with that requirement.
+Table 7 includes the results of such inquiry.
+In the case of all the events being independent, the probability of fulfilling the requirements goes from 0.969 to 1, so one can infer the tank pressure system is likely to fulfil the requirements.
+When the independence assumption is removed, and the mixed dependence scenario is adopted, it is possible to see how the uncertainty on the assessment increases.
+Finally, if all the dependence assumptions are relaxed, the probability goes from $0$ to $1$, meaning that no guarantees can be given on the reliability of the tank pressure system.
+These results are illustrated in Figure 4 (right), which depicts how dramatic the consequences can be when assuming certain dependencies for the events.
+
+\begin{table}[!th]
+\centering
+\caption{Probability of $\mathbb{P}(E_1) <= 10^{-4}$ in the P-box scenario.}\label{tab1}
+\begin{tabular}{|c|c|}
+\hline
+Case               & $\mathbb{P}(E_1) <= 10^{-4}$ \\ \hline
+Independence       & {[}0.969, 1{]}    \\ \hline
+Mixed Dependence   & {[}0.88, 1{]}     \\ \hline
+Unknown Dependence & {[}0, 1{]}        \\ \hline
+\end{tabular}
+\end{table}
+
+%\section{Dependency tracking}
+%
+%[Not all properties  (pg. 24 of Klir for %list) of Boolean algebra (eg associativity, %commutivity) hold in the uncertain case. %However, these properties are retrieved %once dependency tracking is performed]
+
+\begin{figure}[!ht]
+    \centering
+        \centering
+        \includegraphics[width=0.5\linewidth]{figures/intervals.pdf}%
+        \hfill
+        \includegraphics[width=0.5\linewidth]{figures/mixed.pdf}
+    \caption{\textbf{(Left)} Interval of the probability of $E_1$ for different dependence assumptions. \textbf{(Right)} Probability box of the probability of $E_1$ for different dependence assumptions.}
+\end{figure}
+
+\section{Conclusion}
+
+%Boolean operators have many applications, ranging from %propositional logic connecting propositions and their truth %values, to system reliability analysis connecting the probability %of failure of its components.
+%In classical logic absolute certainty on the propositions or %components is required (i.e. true or false, 1 or 0).
+%However, to make Boolean operators useful for most of practical %applications it is needed to relax these requirements.
+In this paper, classical Boolean functions have been generalised to be able to operate with precise probabilities, intervals, p-boxes, and with any input correlation.
+We show an application of the generalisation of Boolean operations calculating the probability of failure of a pressure tank system.
+The uncertainty is propagated through the fault tree with different combinations of probabilities of the events, intervals, and p-boxes, under different dependence assumptions.
+The results suggest that assumptions on the probability or dependence of the events have a strong impact on the outcome of the analysis, and these should
+be carefully addressed in any serious assessment.
+
+The computational resources to perform correlated Boolean operations are available in the following open-source Julia package: \url{https://github.com/Institute-for-Risk-and-Uncertainty/UncLogic.jl}
+
+\section*{Acknowledgements}
+
+This research was funded by the EPSRC and ESRC CDT in Risk and Uncertainty (EP/L015927/1), established within the Institute for Risk and Uncertainty at the University of Liverpool.
+This work has been carried out within the framework of the EUROfusion Consortium and has received funding from the
+Euratom research and training programme 2014-2018 and 2019-2020 under grant agreement No 633053.
+The views and opinions expressed herein do not necessarily reflect those of the European Commission.
+
+% ---- Bibliography ----
+%
+% BibTeX users should specify bibliography style 'splncs04'.
+% References will then be sorted and formatted in the correct style.
+%
+% \bibliographystyle{splncs04}
+% \bibliography{mybibliography}
+%
+
+\bibliographystyle{splncs04}
+\bibliography{references.bib}
+
+\iffalse
+\begin{thebibliography}{8}
+\bibitem{ref_article1}
+Author, F.: Article title. Journal \textbf{2}(5), 99--110 (2016)
+
+\bibitem{ref_lncs1}
+Author, F., Author, S.: Title of a proceedings paper. In: Editor,
+F., Editor, S. (eds.) CONFERENCE 2016, LNCS, vol. 9999, pp. 1--13.
+Springer, Heidelberg (2016). \doi{10.10007/1234567890}
+
+\bibitem{ref_book1}
+Author, F., Author, S., Author, T.: Book title. 2nd edn. Publisher,
+Location (1999)
+
+\bibitem{ref_proc1}
+Author, A.-B.: Contribution title. In: 9th International Proceedings
+on Proceedings, pp. 1--2. Publisher, Location (2010)
+
+\bibitem{ref_url1}
+LNCS Homepage, \url{http://www.springer.com/lncs}. Last accessed 4
+Oct 2017
+\end{thebibliography}
+\fi
+\end{document}
