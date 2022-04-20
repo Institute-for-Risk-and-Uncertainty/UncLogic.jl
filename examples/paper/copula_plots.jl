@@ -2,8 +2,8 @@ using UncLogic, BivariateCopulas, PyPlot, LaTeXStrings
 
 N = 200
 figsize = (10,10)
-fontsize = 28
-ft_ticks = 25
+fontsize = 45
+ft_ticks = 35
 
 is = range(0, 1,length=N)
 js = range(0, 1,length=N)
@@ -31,8 +31,8 @@ for (i,r) in enumerate(rs)
 
     PyPlot.title("ρ = $(rs_plot[i])", fontsize = fontsize)
     PyPlot.tight_layout()
-    savefig("copulas/cop_$(rs_plot[i]).png")
-    savefig("copulas/cop_$(rs_plot[i]).pdf")
+    savefig("cop_$(rs_plot[i]).png")
+    savefig("cop_$(rs_plot[i]).pdf")
     PyPlot.clf()
 
 end
